@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EaintcherryMB Music Player</title>
+    <style>
+        :root {
+            --primary-color: #1db954;
+            --bg-dark: #121212;
+            --item-bg: #282828;
+            --item-hover: #3e3e3e;
+            --text-main: #ffffff;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            color: var(--text-main); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 20px; 
+            margin: 0;
+            min-height: 100vh;
+            background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('shop-bg.jpg'); 
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-color: var(--bg-dark);
+        }
+
+        .marquee {
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+            white-space: nowrap;
+            margin-bottom: 25px;
+        }
+        .marquee h2 {
+            display: inline-block;
+            padding-left: 100%;
+            animation: marquee 20s linear infinite;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+        @keyframes marquee {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
+        }
+
+        .player-container { 
+            width: 95%; 
+            max-width: 500px; 
+            background: #181818;
+            padding: 30px 20px; 
+            border-radius: 25px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6); 
+            text-align: center; 
+            position: sticky; 
+            top: 10px; 
+            z-index: 100; 
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        #current-song { 
+            font-size: 1.3em; 
+            font-weight: bold; 
+            color: var(--primary-color); 
+            margin-bottom: 20px; 
+            line-height: 1.4;
+            min-height: 3em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        audio { width: 100%; height: 45px; filter: invert(90%); }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn {
+            background: #333;
+            border: none;
+            color: white;
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            flex: 1;
+            transition: 0.2s;
+        }
+
+        /* ဖုန်းထဲက သီချင်းထည့်တဲ့ ခလုတ်အလှ */
+        .local-upload-btn {
+            background: var(--primary-color);
+            color: black;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            width: 100%;
+            transition: 0.3s;
+        }
+        .local-upload-btn:hover { background: #1ed760; }
+
+        .active-mode { background: var(--primary-color) !important; }
+
+        #playlist { 
+            list-style: none; 
+            padding: 0; 
+            margin-top: 25px; 
+            width: 95%; 
+            max-width: 500px; 
+        }
+        .song-item { 
+            background: var(--item-bg);
+            margin-bottom: 15px; 
+            padding: 20px; 
+            border-radius: 15px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border: 1px solid transparent;
+            transition: 0.3s ease;
+        }
+        .song-item:active { transform: scale(0.98); }
+        .song-item.active { 
+            border: 1px solid var(--primary-color);
+            background: #2e2e2e;
+        }
+
+        .song-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .song-info { 
+            cursor: pointer; 
+            font-size: 1.15em;
+            font-weight: 500;
+            line-height: 1.5;
+            color: var(--text-main);
+            flex: 1;
+            padding-right: 15px;
+            text-align: left;
+        }
+        .song-item.active .song-info { color: var(--primary-color); }
+        
+        .share-btn {
+            background: #404040;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .loader {
+            border: 4px solid #333;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 40px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="marquee">
+        <h2>🎵 အိမ့်ချယ်ရီမိုဘိုင်း music — “အိမ့်ချယ်ရီ မိုဘိုင်းလ်နှင့်လျှပ်စစ်” အမှတ်(၅)ရပ်ကွက်၊ဒို့အင်အားဆိုင်ရှေ့၊ ကုန်သည်လမ်း၊လပွတ္တာမြို့။ ဖုန်း-09790199067-09262450004 အားပေးမှုကို ကျေးဇူးတင်ပါသည်🎵</h2>
+    </div>
+
+    <div class="player-container">
+        <input type="file" id="local-file-input" accept="audio/*" style="display: none;">
+        <button class="local-upload-btn" onclick="document.getElementById('local-file-input').click()">
+            📂 ဖုန်းထဲမှ သီချင်းရွေးဖွင့်ရန်
+        </button>
+
+        <div id="current-song">သီချင်းရွေးချယ်ပါ</div>
+        <audio id="audio-player" controls></audio>
+        
+        <div class="controls">
+            <button class="btn" onclick="prevSong()">⏮ Prev</button>
+            <button class="btn" id="repeat-btn" onclick="toggleRepeat()">🔁 Repeat Off</button>
+            <button class="btn" onclick="nextSong()">Next ⏭</button>
+        </div>
+    </div>
+
+    <ul id="playlist">
+        <div class="loader" id="loader"></div>
+    </ul>
+
+    <script>
+        const sources = [
+            { username: "EaintcherryMB", repo: "music-gitapp" },
+            { username: "EaintcherryMB", repo: "Songs" },
+            { username: "EaintcherryMB", repo: "Dhamma" },
+            { username: "cherry08-p", repo: "MymusicApp" }
+        ];
+
+        const playlistElement = document.getElementById('playlist');
+        const audioPlayer = document.getElementById('audio-player');
+        const currentSongTitle = document.getElementById('current-song');
+        const repeatBtn = document.getElementById('repeat-btn');
+        const localFileInput = document.getElementById('local-file-input');
+
+        let songs = [];
+        let currentIndex = -1;
+        let repeatMode = 'off';
+
+        // ဖုန်းထဲက သီချင်းကို ရွေးလိုက်တဲ့အခါ ဖွင့်ပေးမည့် Function
+        localFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const fileURL = URL.createObjectURL(file);
+                audioPlayer.src = fileURL;
+                audioPlayer.play();
+                currentSongTitle.innerText = file.name.replace('.mp3', '');
+                
+                // Playlist ထဲက highlight တွေကို ဖယ်လိုက်မယ်
+                document.querySelectorAll('.song-item').forEach(item => item.classList.remove('active'));
+                currentIndex = -1; 
+            }
+        });
+
+        async function fetchSongs() {
+            try {
+                const fetchPromises = sources.map(src => 
+                    fetch(`https://api.github.com/repos/${src.username}/${src.repo}/contents/?t=${new Date().getTime()}`)
+                    .then(res => res.ok ? res.json() : [])
+                    .catch(() => [])
+                );
+
+                const results = await Promise.all(fetchPromises);
+                songs = results.flat().filter(file => file.name && file.name.toLowerCase().endsWith('.mp3'));
+                
+                if (songs.length === 0) {
+                    playlistElement.innerHTML = "<li style='text-align:center'>သီချင်းမရှိသေးပါ။</li>";
+                    return;
+                }
+                
+                document.getElementById('loader').style.display = 'none';
+                renderPlaylist();
+            } catch (error) {
+                playlistElement.innerHTML = "<li style='text-align:center'>Error: API ချိတ်ဆက်မှု မအောင်မြင်ပါ။</li>";
+            }
+        }
+
+        function renderPlaylist() {
+            playlistElement.innerHTML = ""; 
+            songs.forEach((song, index) => {
+                const cleanName = song.name.replace('.mp3', '').replace(/[-_]/g, ' ');
+                const li = document.createElement('li');
+                li.className = "song-item";
+                li.id = "song-" + index;
+                
+                li.innerHTML = `
+                    <div class="song-content">
+                        <div class="song-info" onclick="playSong(${index})">
+                            ▶ ${cleanName}
+                        </div>
+                        <button class="share-btn" onclick="shareSong('${song.name}')">
+                            Share 🔗
+                        </button>
+                    </div>
+                `;
+                playlistElement.appendChild(li);
+            });
+        }
+
+        function playSong(index) {
+            if (index < 0 || index >= songs.length) return;
+            currentIndex = index;
+            audioPlayer.src = songs[index].download_url;
+            audioPlayer.play();
+            currentSongTitle.innerText = songs[index].name.replace('.mp3', '').replace(/[-_]/g, ' ');
+            
+            document.querySelectorAll('.song-item').forEach(item => item.classList.remove('active'));
+            const activeItem = document.getElementById("song-" + index);
+            if(activeItem) {
+                activeItem.classList.add('active');
+                activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function nextSong() {
+            if (currentIndex === -1) return; // Local file ဖွင့်ထားရင် next မလုပ်ပါ
+            let next = (currentIndex + 1 >= songs.length) ? 0 : currentIndex + 1;
+            playSong(next);
+        }
+
+        function prevSong() {
+            if (currentIndex === -1) return;
+            let prev = (currentIndex - 1 < 0) ? songs.length - 1 : currentIndex - 1;
+            playSong(prev);
+        }
+
+        function toggleRepeat() {
+            if (repeatMode === 'off') {
+                repeatMode = 'all';
+                repeatBtn.innerText = "🔁 Repeat All";
+                repeatBtn.classList.add('active-mode');
+            } else if (repeatMode === 'all') {
+                repeatMode = 'one';
+                repeatBtn.innerText = "🔂 Repeat One";
+            } else {
+                repeatMode = 'off';
+                repeatBtn.innerText = "🔁 Repeat Off";
+                repeatBtn.classList.remove('active-mode');
+            }
+        }
+
+        function shareSong(songName) {
+            const cleanName = songName.replace('.mp3', '');
+            const shareData = {
+                title: 'EaintcherryMB Music',
+                text: `နားဆင်ကြည့်ပါ - ${cleanName}`,
+                url: window.location.href
+            };
+            if (navigator.share) {
+                navigator.share(shareData);
+            } else {
+                navigator.clipboard.writeText(`${shareData.text} \n ${shareData.url}`);
+                alert("Link ကို Copy ကူးပြီးပါပြီ!");
+            }
+        }
+
+        audioPlayer.onended = () => {
+            if (repeatMode === 'one') audioPlayer.play();
+            else if (currentIndex !== -1) nextSong();
+        };
+
+        fetchSongs();
+    </script>
+</body>
+</html>
