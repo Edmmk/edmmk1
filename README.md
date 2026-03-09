@@ -1,4 +1,4 @@
 # edmmk1
 
 Link///
-https://github.com/Edmmk/edmmk1/
+https://edmmk.github.io/edmmk1/
